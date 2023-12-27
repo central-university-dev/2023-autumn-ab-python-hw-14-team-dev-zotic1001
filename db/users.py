@@ -1,0 +1,16 @@
+from typing import Optional
+
+from sqlalchemy.orm import Session
+from . import models
+
+
+class UsersRepo:
+    def __init__(self, db: Session):
+        self.db = db
+
+    def get_user(self, user_id: int) -> Optional[models.User]:
+        return (
+            self.db.query(models.User)
+            .filter(models.User.id == user_id)
+            .first()
+        )

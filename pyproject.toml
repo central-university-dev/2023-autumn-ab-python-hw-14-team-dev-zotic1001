@@ -1,22 +1,16 @@
-[build-system]
-requires = ["setuptools>=68.1"]
-build-backend = "setuptools.build_meta"
-
-[project]
-name = "homework_10"
-version = "0.0.1"
-authors = [
-  { name="Dmitry Kosarevsky", email="if@kosarevsky.ru" },
-]
-description = "A Tinkoff Python AB hw-10 package"
+[tool.poetry]
+name = "2023-autumn-ab-python-hw-14-team-dev-zotic1001"
+version = "0.1.0"
+description = ""
+authors = ["Pavel Zakharov <zotic1001@gmail.com>", "Dzekalo Andrei"]
 readme = "README.md"
-requires-python = ">=3.12"
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
-]
 
-[project.urls]
-"Homepage" = "https://github.com/central-university-dev/python-hw-10-template"
-"Bug Tracker" = "https://github.com/central-university-dev/python-hw-10-template/issues"
+[tool.poetry.dependencies]
+python = "^3.10"
+pydantic = "^2.5.3"
+fastapi = "^0.108.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
