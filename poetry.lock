@@ -671,6 +671,23 @@ pydantic = ">=2.3.0"
 python-dotenv = ">=0.21.0"
 
 [[package]]
+name = "pyjwt"
+version = "2.8.0"
+description = "JSON Web Token implementation in Python"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "PyJWT-2.8.0-py3-none-any.whl", hash = "sha256:59127c392cc44c2da5bb3192169a91f429924e17aff6534d70fdc02ab3e04320"},
+    {file = "PyJWT-2.8.0.tar.gz", hash = "sha256:57e28d156e3d5c10088e0c68abb90bfac3df82b40a71bd0daa20c65ccd5c23de"},
+]
+
+[package.extras]
+crypto = ["cryptography (>=3.4.0)"]
+dev = ["coverage[toml] (==5.0.4)", "cryptography (>=3.4.0)", "pre-commit", "pytest (>=6.0.0,<7.0.0)", "sphinx (>=4.5.0,<5.0.0)", "sphinx-rtd-theme", "zope.interface"]
+docs = ["sphinx (>=4.5.0,<5.0.0)", "sphinx-rtd-theme", "zope.interface"]
+tests = ["coverage[toml] (==5.0.4)", "pytest (>=6.0.0,<7.0.0)"]
+
+[[package]]
 name = "pytest"
 version = "6.2.5"
 description = "pytest: simple powerful testing with Python"
@@ -880,4 +897,4 @@ standard = ["PyYAML (>=5.1)", "colorama (>=0.4)", "httptools (==0.2.*)", "python
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "7177964072c10e69c53c48d948d158fc682e25d15bb8db2eb6485505f732fc7b"
+content-hash = "835570e9f9321c772cd86986392ac2beba7b4b4175f4fef586b143fd05658409"

@@ -26,4 +26,4 @@ COPY src/homework /opt/app/server
 COPY src/config /opt/app/config
 
 # Application entrypoint
-CMD ["uvicorn", "homework.asgi:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "src.server.asgi:app", "--host", "0.0.0.0", "--port", "8000"]

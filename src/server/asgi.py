@@ -4,7 +4,6 @@ from faker import Faker
 from fastapi import FastAPI
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from db.models import User, Word, Category
 from config.settings import app_settings
 from .contracts import Token, AuthAttributes
 from db.users import UsersRepo
@@ -32,12 +31,19 @@ logging_config = {
 logging.config.dictConfig(logging_config)
 
 engine = create_engine(app_settings.db)
-SessionLocal = sessionmaker(autocommit=True, autoflush=False, bind=engine)
+SessionLocal = sessionmaker(autoflush=False, bind=engine)
 
 
 @app.post("/auth", response_model=Token)
-async def authorization(auth_attributes: AuthAttributes) -> Token:
+def authorization(auth_attributes: AuthAttributes) -> Token:
     with SessionLocal() as session:
         users_table = UsersRepo(session)
-        user = users_table.check_user(auth_attributes)
-    return Token(message="Hello that", code=1)
+        return users_table.login_user(auth_attributes)
+
+
+@app.post("/register", response_model=Token)
+def register(auth_attributes: AuthAttributes) -> Token:
+    with SessionLocal() as session:
+        users_table = UsersRepo(session)
+        session.commit()
+        return users_table.add_user(auth_attributes)
