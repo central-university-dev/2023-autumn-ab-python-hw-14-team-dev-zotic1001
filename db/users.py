@@ -5,6 +5,8 @@ from typing import Optional
 from sqlalchemy.orm import Session
 from . import models
 from src.server.contracts import AuthAttributes
+from .words_repo import WordsRepo
+
 
 class UsersRepo:
     def __init__(self, db: Session):
@@ -41,3 +43,12 @@ class UsersRepo:
         else:
             return None
 
+    def add_last_word(self, user_id: int, word: str):
+        wr = WordsRepo(self.db)
+        word1 = wr.get_word(word)
+        self.db.query.execute(
+            models.association_table2.insert(), {
+                "user_id": user_id,
+                "word_id": word1.word_id
+            }
+        )

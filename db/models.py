@@ -23,5 +23,5 @@ association_table2 = Table(
     "association_table_words_and_users",
     Base.metadata,
     Column("words", ForeignKey("words.word_id")),
-    Column("users", ForeignKey("users.user_id")),
+    Column("users", ForeignKey("users.user_id"), unique=True),
 )
