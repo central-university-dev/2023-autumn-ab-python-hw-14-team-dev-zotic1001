@@ -18,4 +18,4 @@ RUN poetry config virtualenvs.create false \
     && poetry install
 
 # Application entrypoint
-CMD ["uvicorn", "src.homework.asgi:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["uvicorn", "src.server.asgi:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
