@@ -45,5 +45,6 @@ def authorization(auth_attributes: AuthAttributes) -> Token:
 def register(auth_attributes: AuthAttributes) -> Token:
     with SessionLocal() as session:
         users_table = UsersRepo(session)
+        token = users_table.add_user(auth_attributes)
         session.commit()
-        return users_table.add_user(auth_attributes)
+    return token
