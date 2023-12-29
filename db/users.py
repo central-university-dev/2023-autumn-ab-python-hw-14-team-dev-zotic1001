@@ -6,7 +6,6 @@ from sqlalchemy.orm import Session
 from . import models
 from src.server.contracts import AuthAttributes
 
-
 class UsersRepo:
     def __init__(self, db: Session):
         self.db = db
