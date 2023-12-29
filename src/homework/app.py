@@ -1,8 +1,9 @@
+import asyncio
 import logging.config
 from config.settings import app_settings
 from fastapi import FastAPI
 from .api.auth.auth_app import auth_app
-
+from db.database import async_main
 logging_config = {
     "version": 1,
     "disable_existing_loggers": False,
