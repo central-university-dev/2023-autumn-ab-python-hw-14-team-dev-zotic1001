@@ -4,7 +4,7 @@ from faker import Faker
 from fastapi import FastAPI
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-
+from db.models import User, Word, Category
 from config.settings import app_settings
 from .contracts import Message
 

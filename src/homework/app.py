@@ -1,6 +1,7 @@
 import logging.config
 from config.settings import app_settings
 from fastapi import FastAPI
+from db.models import User, Word, Category
 
 logging_config = {
     "version": 1,

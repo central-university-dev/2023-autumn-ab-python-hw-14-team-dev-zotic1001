@@ -11,7 +11,7 @@ WORKDIR /opt/app
 RUN pip install poetry
 
 # Copy only requirements to cache them in docker layer
-COPY poetry.lock pyproject.toml src tests ./
+COPY pyproject.toml src tests ./
 
 # Project initialization:
 RUN poetry config virtualenvs.create false \
