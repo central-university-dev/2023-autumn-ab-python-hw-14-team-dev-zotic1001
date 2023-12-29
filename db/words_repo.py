@@ -1,5 +1,4 @@
 import uuid
-import bcrypt
 from config.settings import app_settings
 from typing import Optional
 from sqlalchemy.orm import Session

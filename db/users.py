@@ -1,11 +1,11 @@
 import uuid
-import jwt
 import bcrypt
 from config.settings import app_settings
 from typing import Optional
 from sqlalchemy.orm import Session
 from . import models
 from src.server.contracts import AuthAttributes
+from .words_repo import WordsRepo
 
 
 class UsersRepo:
@@ -38,7 +38,6 @@ class UsersRepo:
             .filter(models.User.user_id == user_id)
             .first()
         )
-        return Token(token=encoded_jwt)
         if user:
             return user
         else:

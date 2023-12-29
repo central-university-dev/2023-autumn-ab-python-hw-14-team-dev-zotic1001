@@ -1,14 +1,17 @@
 import logging.config
 
 from faker import Faker
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, status
+from fastapi.openapi.models import Response
+from fastapi_users import jwt
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from db.models import User, Word, Category
+from src.word import wordClient
+from db.models import User, Word
 from config.settings import app_settings
-from .contracts import Token, AuthAttributes
+from .contracts import Token, AuthAttributes, WordContract
 from db.users import UsersRepo
-
+from db.words_repo import WordsRepo
 
 fake = Faker()
 
