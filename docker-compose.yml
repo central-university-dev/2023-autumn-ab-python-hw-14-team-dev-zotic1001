@@ -1,29 +1,6 @@
 version: '3.8'
 
 services:
-  db:
-    image: postgres:16.1
-    container_name: "postgres_db"
-    volumes:
-      - ./pgdata/:/var/lib/postgresql/data
-    ports:
-      - "15432:5432"
-    restart: always
-    env_file:
-      - .env
-    networks:
-      - postgres-network
-
-  server:
-    image: myimage/tests:latest
-    build:
-      context: .
-      dockerfile: docker/server/Dockerfile
-    ports:
-      - "8000:8000"
-    depends_on:
-      - db
-
   tests:
     build:
       context: .
@@ -38,6 +15,16 @@ services:
       - PYTHONUNBUFFERED=1
     depends_on:
       - db
+  db:
+    image: postgres:16.1
+    volumes:
+      - ./pgdata/:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: mydatabase
+      POSTGRES_USER: username
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
 
 volumes:
   pgdata:

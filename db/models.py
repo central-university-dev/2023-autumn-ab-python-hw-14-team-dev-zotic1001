@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Text
+from sqlalchemy import Column, String
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.dialects.postgresql import UUID
 
@@ -10,4 +10,4 @@ class User(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
-    password_hash = password = Column(String)
+    password_hash = Column(String)
