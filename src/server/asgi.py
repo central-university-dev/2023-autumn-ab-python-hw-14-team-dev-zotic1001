@@ -2,16 +2,15 @@ import logging.config
 
 from faker import Faker
 from fastapi import FastAPI, HTTPException, status
-from fastapi.openapi.models import Response
-from fastapi_users import jwt
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from src.word import wordClient
-from db.models import User, Word
 from config.settings import app_settings
+from db.words_repo import WordsRepo
 from .contracts import Token, AuthAttributes, WordContract
 from db.users import UsersRepo
-from db.words_repo import WordsRepo
+import jwt
+
+from ..word import wordClient
 
 fake = Faker()
 
@@ -35,15 +34,7 @@ logging_config = {
 logging.config.dictConfig(logging_config)
 
 engine = create_engine(app_settings.db)
-SessionLocal = sessionmaker(autocommit=True, autoflush=False, bind=engine)
-
-
-def login(token: str):
-    try:
-        decoded_jwt = jwt.decode(token, app_settings.secret_key, algorithms=["HS256"])
-        return decoded_jwt
-    except jwt.exceptions.DecodeError:
-        return None
+SessionLocal = sessionmaker(autoflush=False, bind=engine)
 
 
 @app.post("/auth", response_model=Token)
@@ -57,13 +48,23 @@ def authorization(auth_attributes: AuthAttributes) -> Token:
 def register(auth_attributes: AuthAttributes) -> Token:
     with SessionLocal() as session:
         users_table = UsersRepo(session)
-        user = users_table.check_user(auth_attributes)
-    return Token(message="Hello that", code=1)
+        session.commit()
+        return users_table.add_user(auth_attributes)
+
+
+def login(token: str):
+    try:
+        user_data = jwt.decode(
+            token, app_settings.secret_key, "HS256"
+        )
+        return user_data
+    except jwt.exceptions.InvalidTokenError:
+        return None
 
 
 @app.get("/word", response_model=WordContract)
-def get_word(response: Response):
-    user_data = login(response.headers["token"])
+def get_word(token: Token):
+    user_data = login(Token.token)
     if user_data is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

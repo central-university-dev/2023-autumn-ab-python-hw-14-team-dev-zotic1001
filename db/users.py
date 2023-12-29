@@ -1,18 +1,18 @@
 import uuid
+import jwt
 import bcrypt
 from config.settings import app_settings
 from typing import Optional
 from sqlalchemy.orm import Session
 from . import models
-from src.server.contracts import AuthAttributes
-from .words_repo import WordsRepo
+from src.server.contracts import AuthAttributes, Token
 
 
 class UsersRepo:
     def __init__(self, db: Session):
         self.db = db
 
-    def check_user(self, auth_attributes: AuthAttributes) -> Optional[models.User]:
+    def login_user(self, auth_attributes: AuthAttributes) -> Optional[models.User]:
         user = (
             self.db.query(models.User)
             .filter(models.User.user_name == auth_attributes.user_name)
@@ -21,34 +21,23 @@ class UsersRepo:
         if user.password_hash != bcrypt.hashpw(auth_attributes.user_password.encode(), app_settings.salt):
             return None
         else:
-            return user
+            encoded_jwt = jwt.encode(
+                {'user_id': user.user_id, 'user_name': user.user_name},
+                app_settings.secret_key,
+                algorithm='HS256',
+            )
+            return Token(token=encoded_jwt)
 
-    def add_user(self, user_name: str, user_password: str) -> Optional[models.User]:
+    def add_user(self, auth_attributes: AuthAttributes) -> Optional[Token]:
         user = models.User(
             user_id=uuid.uuid4(),
-            user_name=user_name,
-            user_password=user_password
+            user_name=auth_attributes.user_name,
+            password_hash=auth_attributes.user_password
         )
         self.db.add(user)
-        return user
-
-    def get_user(self, user_id) -> Optional[models.User]:
-        user = (
-            self.db.query(models.User)
-            .filter(models.User.user_id == user_id)
-            .first()
+        encoded_jwt = jwt.encode(
+            {'user_id': str(user.user_id), 'user_name': user.user_name},
+            app_settings.secret_key,
+            algorithm='HS256',
         )
-        if user:
-            return user
-        else:
-            return None
-
-    def add_last_word(self, user_id: int, word: str):
-        wr = WordsRepo(self.db)
-        word1 = wr.get_word(word)
-        self.db.query.execute(
-            models.association_table2.insert(), {
-                "user_id": user_id,
-                "word_id": word1.word_id
-            }
-        )
+        return Token(token=encoded_jwt)
