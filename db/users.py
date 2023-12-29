@@ -1,26 +1,44 @@
+import uuid
+import bcrypt
+from config.settings import app_settings
 from typing import Optional
-
 from sqlalchemy.orm import Session
 from . import models
-
+from src.server.contracts import AuthAttributes
 
 
 class UsersRepo:
     def __init__(self, db: Session):
         self.db = db
 
-    def get_user(self, user_id: int) -> Optional[models.User]:
-        return (
+    def check_user(self, auth_attributes: AuthAttributes) -> Optional[models.User]:
+        user = (
             self.db.query(models.User)
-            .filter(models.User.id == user_id)
+            .filter(models.User.user_name == auth_attributes.user_name)
             .first()
         )
+        if user.password_hash != bcrypt.hashpw(auth_attributes.user_password.encode(), app_settings.salt):
+            return None
+        else:
+            return user
 
-    def get_user_by_username(self, name: str) -> Optional[models.User]:
-        return (
-            self.db.query(models.User).filter(models.User.name == name).first()
+    def add_user(self, user_name: str, user_password: str) -> Optional[models.User]:
+        user = models.User(
+            user_id=uuid.uuid4(),
+            user_name=user_name,
+            user_password=user_password
         )
-
-    def create_user(self, user: models.User) -> models.User:
         self.db.add(user)
         return user
+
+    def get_user(self, user_id) -> Optional[models.User]:
+        user = (
+            self.db.query(models.User)
+            .filter(models.User.user_id == user_id)
+            .first()
+        )
+        if user:
+            return user
+        else:
+            return None
+

@@ -6,7 +6,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from db.models import User, Word, Category
 from config.settings import app_settings
-from .contracts import Message
+from .contracts import Token, AuthAttributes
+from db.users import UsersRepo
+
 
 fake = Faker()
 
@@ -30,9 +32,12 @@ logging_config = {
 logging.config.dictConfig(logging_config)
 
 engine = create_engine(app_settings.db)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+SessionLocal = sessionmaker(autocommit=True, autoflush=False, bind=engine)
 
 
-@app.get("/", response_model=Message)
-async def root() -> Message:
-    return Message(message="Hello that", code=1)
+@app.post("/auth", response_model=Token)
+async def authorization(auth_attributes: AuthAttributes) -> Token:
+    with SessionLocal() as session:
+        users_table = UsersRepo(session)
+        user = users_table.check_user(auth_attributes)
+    return Token(message="Hello that", code=1)
