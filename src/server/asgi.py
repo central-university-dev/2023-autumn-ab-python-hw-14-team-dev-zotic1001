@@ -1,7 +1,8 @@
 import logging.config
+from typing import Annotated
 
 from faker import Faker
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, status, Header
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from config.settings import app_settings
@@ -63,8 +64,8 @@ def login(token: str):
 
 
 @app.get("/word", response_model=WordContract)
-def get_word(token: Token):
-    user_data = login(Token.token)
+def get_word(header: Annotated[str | None, Header()]):
+    user_data = login(header)
     if user_data is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -73,6 +74,8 @@ def get_word(token: Token):
         )
     resp = wordClient.get_word_and_translate()
     with SessionLocal() as session:
-        WordsRepo(session).add_word(resp[0], resp[1])
-        UsersRepo(session).add_last_word(user_data["user_id"], "")
+        wrs = WordsRepo(session)
+        wrs.add_word(resp[0], resp[1])
+        session.commit()
+        wrs.add_last_word(resp[0], user_data["user_id"])
     return WordContract(resp[0])
