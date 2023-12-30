@@ -18,11 +18,9 @@ class UsersRepo:
             .filter(models.User.user_name == auth_attributes.user_name)
             .first()
         )
-        if user.password_hash != bcrypt.hashpw(auth_attributes.user_password.encode(), app_settings.salt):
-            return None
-        else:
+        if user and user.password_hash != bcrypt.hashpw(auth_attributes.user_password.encode(), app_settings.salt):
             encoded_jwt = jwt.encode(
-                {'user_id': user.user_id, 'user_name': user.user_name},
+                {'user_id': str(user.user_id), 'user_name': user.user_name},
                 app_settings.secret_key,
                 algorithm='HS256',
             )
@@ -32,7 +30,7 @@ class UsersRepo:
         user = models.User(
             user_id=uuid.uuid4(),
             user_name=auth_attributes.user_name,
-            password_hash=auth_attributes.user_password
+            password_hash=bcrypt.hashpw(auth_attributes.user_password.encode(), app_settings.salt),
         )
         self.db.add(user)
         encoded_jwt = jwt.encode(
