@@ -1,6 +1,8 @@
 import uuid
 import jwt
 import bcrypt
+from passlib.context import CryptContext
+
 from config.settings import app_settings
 from typing import Optional
 from sqlalchemy.orm import Session
@@ -11,6 +13,7 @@ from src.server.contracts import AuthAttributes, Token
 class UsersRepo:
     def __init__(self, db: Session):
         self.db = db
+        self.pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
     def login_user(self, auth_attributes: AuthAttributes) -> Optional[Token]:
         user = (
@@ -18,7 +21,7 @@ class UsersRepo:
             .filter(models.User.user_name == auth_attributes.user_name)
             .first()
         )
-        if user and user.password_hash == bcrypt.hashpw(auth_attributes.user_password.encode(), app_settings.salt):
+        if user is not None and self.pwd_context.verify(auth_attributes.user_password.encode(), user.password_hash):
             encoded_jwt = jwt.encode(
                 {'user_id': str(user.user_id), 'user_name': user.user_name},
                 app_settings.secret_key,
@@ -32,7 +35,7 @@ class UsersRepo:
         user = models.User(
             user_id=uuid.uuid4(),
             user_name=auth_attributes.user_name,
-            password_hash=bcrypt.hashpw(auth_attributes.user_password.encode(), app_settings.salt),
+            password_hash=self.pwd_context.hash(auth_attributes.user_password.encode()),
         )
         self.db.add(user)
         encoded_jwt = jwt.encode(

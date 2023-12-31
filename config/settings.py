@@ -5,7 +5,6 @@ from pydantic_settings import BaseSettings
 class AppSetting(BaseSettings):
     log_level: str = 'DEBUG'
     db: str = ''
-    salt: bytes = bcrypt.gensalt()
     secret_key: str = ''
     api_key: str = ''
 
