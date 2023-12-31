@@ -15,3 +15,7 @@ class AuthAttributes(BaseModel):
 
 class Token(BaseModel):
     token: str
+
+
+class WordContract(BaseModel):
+    word: str
