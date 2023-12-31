@@ -28,10 +28,12 @@ def get_word_and_translate():
     return word, response.json()["responseData"]["translatedText"]
 
 
-def assert_word(w1, w2):
+def assert_word(w1: str, w2: str):
+    w1 = w1.lower()
+    w2 = w2.lower()
     len_w1 = len(w1)
     len_w2 = len(w2)
     min_len = min(len_w1, len_w2)
     num_mismatch = sum(c1 != c2 for c1, c2 in zip(w1, w2))
     match_percentage = (min_len - num_mismatch) / min_len * 100
-    return match_percentage >= 80
+    return match_percentage >= 50

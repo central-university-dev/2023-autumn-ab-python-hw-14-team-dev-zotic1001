@@ -4,9 +4,9 @@ from pydantic_settings import BaseSettings
 
 class AppSetting(BaseSettings):
     log_level: str = 'DEBUG'
-    db: str = 'postgresql://username:password@db:5432/mydatabase'
+    db: str = ''
     salt: bytes = bcrypt.gensalt()
-    secret_key: str = 'secret_key'
+    secret_key: str = ''
     api_key: str = ''
 
     class Config:

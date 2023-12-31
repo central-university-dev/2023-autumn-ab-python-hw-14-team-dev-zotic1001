@@ -12,21 +12,23 @@ class UsersRepo:
     def __init__(self, db: Session):
         self.db = db
 
-    def login_user(self, auth_attributes: AuthAttributes) -> Optional[models.User]:
+    def login_user(self, auth_attributes: AuthAttributes) -> Optional[Token]:
         user = (
             self.db.query(models.User)
             .filter(models.User.user_name == auth_attributes.user_name)
             .first()
         )
-        if user and user.password_hash != bcrypt.hashpw(auth_attributes.user_password.encode(), app_settings.salt):
+        if user and user.password_hash == bcrypt.hashpw(auth_attributes.user_password.encode(), app_settings.salt):
             encoded_jwt = jwt.encode(
                 {'user_id': str(user.user_id), 'user_name': user.user_name},
                 app_settings.secret_key,
                 algorithm='HS256',
             )
             return Token(token=encoded_jwt)
+        return None
 
     def add_user(self, auth_attributes: AuthAttributes) -> Optional[Token]:
+        print(auth_attributes.user_password.encode())
         user = models.User(
             user_id=uuid.uuid4(),
             user_name=auth_attributes.user_name,
