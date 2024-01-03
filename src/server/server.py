@@ -1,17 +1,17 @@
+from typing import Any
 import logging.config
-from typing import Annotated
 
+import jwt
 from fastapi import FastAPI, HTTPException, Header, status
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.exc import IntegrityError
+
 from config.settings import app_settings
 from db.words_repo import WordsRepo
-from .contracts import Token, AuthAttributes, WordContract
 from db.users import UsersRepo
-from sqlalchemy.exc import IntegrityError
-import jwt
-
-from ..word import wordClient
+from src.server.contracts import Token, AuthAttributes, WordContract
+from src.word import word_client
 
 app = FastAPI()
 
@@ -37,22 +37,28 @@ SessionLocal = sessionmaker(autoflush=False, bind=engine)
 
 
 @app.post("/auth", response_model=Token)
-async def authorization(auth_attributes: AuthAttributes) -> HTTPException | Token:
+async def authorization(
+    auth_attributes: AuthAttributes,
+) -> HTTPException | Token:
     try:
         with SessionLocal() as session:
             users_table = UsersRepo(session)
             token = users_table.login_user(auth_attributes)
             if token is None:
-                raise HTTPException(status_code=404, detail="User not found")
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="User not found",
+                )
             return token
     except Exception as error:
         raise HTTPException(
-            status_code=500, detail="Internal Server Error"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal Server Error",
         ) from error
 
 
 @app.post("/register", response_model=Token)
-async def register(auth_attributes: AuthAttributes) -> HTTPException | Token:
+async def register(auth_attributes: AuthAttributes) -> Token | None:
     try:
         with SessionLocal() as session:
             users_table = UsersRepo(session)
@@ -60,36 +66,36 @@ async def register(auth_attributes: AuthAttributes) -> HTTPException | Token:
             session.commit()
         return token
     except IntegrityError as error:
-        print(error.params, type(error.params))
         raise HTTPException(
-            status_code=409, detail="Account already exists"
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Account already exists",
         ) from error
     except Exception as error:
         raise HTTPException(
-            status_code=500, detail="Internal Server Error"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal Server Error",
         ) from error
 
 
-def login(token: str):
+def login(token: str | None) -> Any | None:
+    if token is None:
+        return None
     try:
-        user_data = jwt.decode(
-            token, app_settings.secret_key, "HS256"
-        )
+        user_data = jwt.decode(token, app_settings.secret_key, ["HS256"])
         return user_data
     except jwt.exceptions.InvalidTokenError:
         return None
 
 
 @app.get("/word", response_model=WordContract)
-def get_word(header: Annotated[str | None, Header()]):
-    user_data = login(header)
+def get_word(token: str = Header(None)) -> WordContract | None:
+    user_data = login(token)
     if user_data is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect token",
-            headers={"WWW-Authenticate": "Basic"},
         )
-    resp = wordClient.get_word_and_translate()
+    resp = word_client.get_word_and_translate()
     with SessionLocal() as session:
         wrs = WordsRepo(session)
         wrs.add_word(resp[0], resp[1])
@@ -98,13 +104,15 @@ def get_word(header: Annotated[str | None, Header()]):
 
 
 @app.post("/word", response_model=WordContract)
-def post_word_traslate(header: Annotated[str | None, Header()], word_translation: str):
-    user_data = login(header)
+def post_word_translate(
+    word_translation: str,
+    token: str = Header(None),
+) -> WordContract | None:
+    user_data = login(token)
     if user_data is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect token",
-            headers={"WWW-Authenticate": "Basic"},
         )
     with SessionLocal() as session:
         wrs = WordsRepo(session)
@@ -112,11 +120,13 @@ def post_word_traslate(header: Annotated[str | None, Header()], word_translation
         if last_word is None:
             raise HTTPException(
                 status_code=status.HTTP_423_LOCKED,
-                detail="first run a get query to get the word"
+                detail="first run a get query to get the word",
             )
         wrs.get_word(last_word)
-        if wordClient.assert_word(wrs.get_translation_by_word_title(last_word), word_translation):
-            resp = wordClient.get_word_and_translate()
+        if word_client.assert_word(
+            wrs.get_translation_by_word_title(last_word), word_translation
+        ):
+            resp = word_client.get_word_and_translate()
             with SessionLocal() as session:
                 wrs = WordsRepo(session)
                 wrs.add_word(resp[0], resp[1])

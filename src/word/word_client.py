@@ -1,34 +1,44 @@
+from typing import Any
+
 import requests
 from config.settings import app_settings
 
 
-def get_word_and_translate():
+def get_word_and_translate() -> tuple[str, Any]:
     url = "https://random-words5.p.rapidapi.com/getRandom"
 
     headers = {
         "X-RapidAPI-Key": app_settings.api_key,
-        "X-RapidAPI-Host": "random-words5.p.rapidapi.com"
+        "X-RapidAPI-Host": "random-words5.p.rapidapi.com",
     }
 
-    response = requests.get(url, headers=headers)
+    response = requests.get(url, headers=headers, timeout=10)
 
     word = response.text
 
-    print(word)
     url = "https://translated-mymemory---translation-memory.p.rapidapi.com/get"
 
-    querystring = {"langpair": "en|ru", "q": f"{word}", "mt": "1", "onlyprivate": "0", "de": "a@b.c"}
+    querystring = {
+        "langpair": "en|ru",
+        "q": f"{word}",
+        "mt": "1",
+        "onlyprivate": "0",
+        "de": "a@b.c",
+    }
 
     headers = {
         "X-RapidAPI-Key": app_settings.api_key,
-        "X-RapidAPI-Host": "translated-mymemory---translation-memory.p.rapidapi.com"
+        "X-RapidAPI-Host": "translated-mymemory---"
+        "translation-memory.p.rapidapi.com",
     }
 
-    response = requests.get(url, headers=headers, params=querystring)
+    response = requests.get(
+        url, headers=headers, params=querystring, timeout=10
+    )
     return word, response.json()["responseData"]["translatedText"]
 
 
-def assert_word(w1: str, w2: str):
+def assert_word(w1: str, w2: str) -> bool:
     w1 = w1.lower()
     w2 = w2.lower()
     len_w1 = len(w1)
