@@ -37,7 +37,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: stub env
-        run: cp .env .env
+        run: cp .env.example .env
       - name: build image
         run: |
           docker-compose build tests
