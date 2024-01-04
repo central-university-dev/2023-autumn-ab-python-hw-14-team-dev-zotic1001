@@ -175,6 +175,9 @@ def test_post_word(mocker):  # type: ignore
     mocker.patch.object(
         WordsRepo, "get_translation_by_word_title", return_value='изменить'
     )
+    mocker.patch.object(WordsRepo, "add_word", return_value=None)
+    mocker.patch.object(WordsRepo, "add_last_word", return_value=None)
+    mocker.patch.object(WordsRepo, "get_word", return_value=None)
     response = client.get(
         "/word",
         headers={
@@ -185,7 +188,5 @@ def test_post_word(mocker):  # type: ignore
             "E-ayxwhWvG5fqapc5k7KVNMm5NoY6IF3_Inc"
         },
     )
-    mocker.patch.object(WordsRepo, "add_word", return_value=None)
-    mocker.patch.object(WordsRepo, "add_last_word", return_value=None)
     assert response.status_code == 200
     assert 'word' in response.json()
