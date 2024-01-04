@@ -1,6 +1,5 @@
 import uuid
 import jwt
-import bcrypt
 from passlib.context import CryptContext
 
 from config.settings import app_settings
