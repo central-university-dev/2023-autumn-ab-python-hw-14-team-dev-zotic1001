@@ -10,6 +10,7 @@ from psycopg2.errors import lookup
 from config.settings import app_settings
 from db.users import UsersRepo
 from db.models import User
+from db.words_repo import WordsRepo
 from src.server.server import app, login
 from src.server.contracts import Token
 from src.word import word_client
@@ -146,3 +147,45 @@ def test_post_word_unauthorized(token):  # type: ignore
     )
     assert response.status_code == 401
     assert response.json() == {'detail': 'Incorrect token'}
+
+
+def test_get_word(mocker):  # type: ignore
+    mocker.patch.object(WordsRepo, "add_word", return_value=None)
+    mocker.patch.object(WordsRepo, "add_last_word", return_value=None)
+    response = client.get(
+        "/word",
+        headers={
+            'token': "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ"
+            "9.eyJ1c2VyX2lkIjoiNDY5N2VlZDctODE5M"
+            "y00MjQ5LWIxMzktOTZhZjZiMjI0MTdhIiwi"
+            "dXNlcl9uYW1lIjoiQW5kcmVpIn0.B1tec9Y"
+            "E-ayxwhWvG5fqapc5k7KVNMm5NoY6IF3_Inc"
+        },
+    )
+    assert response.status_code == 200
+    assert 'word' in response.json()
+
+
+def test_post_word(mocker):  # type: ignore
+    mocker.patch.object(
+        WordsRepo,
+        "get_user_last_word",
+        return_value='alter',
+    )
+    mocker.patch.object(
+        WordsRepo, "get_translation_by_word_title", return_value='изменить'
+    )
+    response = client.get(
+        "/word",
+        headers={
+            'token': "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ"
+            "9.eyJ1c2VyX2lkIjoiNDY5N2VlZDctODE5M"
+            "y00MjQ5LWIxMzktOTZhZjZiMjI0MTdhIiwi"
+            "dXNlcl9uYW1lIjoiQW5kcmVpIn0.B1tec9Y"
+            "E-ayxwhWvG5fqapc5k7KVNMm5NoY6IF3_Inc"
+        },
+    )
+    mocker.patch.object(WordsRepo, "add_word", return_value=None)
+    mocker.patch.object(WordsRepo, "add_last_word", return_value=None)
+    assert response.status_code == 200
+    assert 'word' in response.json()
