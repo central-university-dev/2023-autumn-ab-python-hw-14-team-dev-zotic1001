@@ -1,4 +1,5 @@
 import uuid
+import pytest
 
 import jwt
 from sqlalchemy.orm import Session
@@ -9,8 +10,9 @@ from psycopg2.errors import lookup
 from config.settings import app_settings
 from db.users import UsersRepo
 from db.models import User
-from src.server.server import app
+from src.server.server import app, login
 from src.server.contracts import Token
+from src.word import word_client
 
 client = TestClient(app)
 
@@ -75,3 +77,72 @@ def test_register_account_already_exists(mocker) -> None:  # type: ignore
     )
     assert response.status_code == 409
     assert response.json() == {'detail': 'Account already exists'}
+
+
+def test_get_world():  # type: ignore
+    word = word_client.get_word()
+    assert isinstance(word, str)
+    assert len(word) > 1
+
+
+@pytest.mark.parametrize(
+    'word, translate_word',
+    [('dog', 'собака'), ('cat', 'кот'), ('box', 'коробка')],
+)
+def test_translate(word, translate_word):  # type: ignore
+    translate = word_client.translate_word(word)
+    assert translate.lower() == translate_word.lower()
+
+
+@pytest.mark.parametrize(
+    'target_word, word',
+    [('собака', 'собака'), ('код', 'кот'), ('коробки', 'коробка')],
+)  # type: ignore
+def test_assert_word_true(target_word, word):
+    assert word_client.assert_word(target_word, word)
+
+
+@pytest.mark.parametrize(
+    'target_word, word',
+    [('собака', 'кот'), ('кот', 'собака'), ('кобра', 'коробка')],
+)
+def test_assert_word_false(target_word, word):  # type: ignore
+    assert not word_client.assert_word(target_word, word)
+
+
+def test_login_happy_path():  # type: ignore
+    return_value = {
+        "user_name": "Andrei",
+        "user_id": "4697eed7-8193-4249-b139-96af6b22417a",
+    }
+    assert (
+        login(
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ"
+            "9.eyJ1c2VyX2lkIjoiNDY5N2VlZDctODE5M"
+            "y00MjQ5LWIxMzktOTZhZjZiMjI0MTdhIiwi"
+            "dXNlcl9uYW1lIjoiQW5kcmVpIn0.B1tec9Y"
+            "E-ayxwhWvG5fqapc5k7KVNMm5NoY6IF3_Inc"
+        )
+        == return_value
+    )
+
+
+@pytest.mark.parametrize('token', ['a', '1', None])
+def test_login_bad_token(token):  # type: ignore
+    assert login(token) is None
+
+
+@pytest.mark.parametrize('token', ['a', '1', 'hello'])
+def test_get_word_unauthorized(token):  # type: ignore
+    response = client.get("/word", headers={'token': token})
+    assert response.status_code == 401
+    assert response.json() == {'detail': 'Incorrect token'}
+
+
+@pytest.mark.parametrize('token', ['a', '1', 'hello'])
+def test_post_word_unauthorized(token):  # type: ignore
+    response = client.post(
+        "/word", headers={'token': token}, json={'translation': 'кот'}
+    )
+    assert response.status_code == 401
+    assert response.json() == {'detail': 'Incorrect token'}

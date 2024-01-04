@@ -4,18 +4,17 @@ import requests
 from config.settings import app_settings
 
 
-def get_word_and_translate() -> tuple[str, Any]:
+def get_word() -> str:
     url = "https://random-words5.p.rapidapi.com/getRandom"
-
     headers = {
         "X-RapidAPI-Key": app_settings.api_key,
         "X-RapidAPI-Host": "random-words5.p.rapidapi.com",
     }
-
     response = requests.get(url, headers=headers, timeout=10)
+    return response.text
 
-    word = response.text
 
+def translate_word(word: str) -> Any | str:
     url = "https://translated-mymemory---translation-memory.p.rapidapi.com/get"
 
     querystring = {
@@ -35,7 +34,7 @@ def get_word_and_translate() -> tuple[str, Any]:
     response = requests.get(
         url, headers=headers, params=querystring, timeout=10
     )
-    return word, response.json()["responseData"]["translatedText"]
+    return response.json()["responseData"]["translatedText"]
 
 
 def assert_word(w1: str, w2: str) -> bool:

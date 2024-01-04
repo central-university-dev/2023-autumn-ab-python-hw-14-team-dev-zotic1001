@@ -19,3 +19,7 @@ class Token(BaseModel):
 
 class WordContract(BaseModel):
     word: str
+
+
+class WordTranslation(BaseModel):
+    translation: str

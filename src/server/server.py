@@ -10,7 +10,12 @@ from sqlalchemy.exc import IntegrityError
 from config.settings import app_settings
 from db.words_repo import WordsRepo
 from db.users import UsersRepo
-from src.server.contracts import Token, AuthAttributes, WordContract
+from src.server.contracts import (
+    Token,
+    AuthAttributes,
+    WordContract,
+    WordTranslation,
+)
 from src.word import word_client
 
 app = FastAPI()
@@ -95,17 +100,18 @@ def get_word(token: str = Header(None)) -> WordContract | None:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect token",
         )
-    resp = word_client.get_word_and_translate()
+    word = word_client.get_word()
+    translation = word_client.translate_word(word)
     with SessionLocal() as session:
         wrs = WordsRepo(session)
-        wrs.add_word(resp[0], resp[1])
-        wrs.add_last_word(resp[0], user_data["user_id"])
-    return WordContract(word=resp[0])
+        wrs.add_word(word, translation)
+        wrs.add_last_word(word, user_data["user_id"])
+    return WordContract(word=word)
 
 
 @app.post("/word", response_model=WordContract)
 def post_word_translate(
-    word_translation: str,
+    word_translation: WordTranslation,
     token: str = Header(None),
 ) -> WordContract | None:
     user_data = login(token)
@@ -124,14 +130,16 @@ def post_word_translate(
             )
         wrs.get_word(last_word)
         if word_client.assert_word(
-            wrs.get_translation_by_word_title(last_word), word_translation
+            wrs.get_translation_by_word_title(last_word),
+            word_translation.translation,
         ):
-            resp = word_client.get_word_and_translate()
+            word = word_client.get_word()
+            translation = word_client.translate_word(word)
             with SessionLocal() as session:
                 wrs = WordsRepo(session)
-                wrs.add_word(resp[0], resp[1])
+                wrs.add_word(word, translation)
                 session.commit()
-                wrs.add_last_word(resp[0], user_data["user_id"])
-                return WordContract(word=resp[0])
+                wrs.add_last_word(word, user_data["user_id"])
+                return WordContract(word=word)
 
         return WordContract(word=last_word)
